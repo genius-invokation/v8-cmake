@@ -23,12 +23,6 @@ if(WIN32)
   add_definitions("-D_WIN32_WINNT=0x0602")
 endif()
 
-set(msvc-compile-options /utf-8
-/wd4661 /wd4819 /wd4267 /wd4996 /wd4244
-/wd4005 /wd4146 /wd4715 /wd4530 /wd4838
-/wd4506 /wd4309 /wd4312 /wd4334)
-add_compile_options("$<$<C_COMPILER_ID:MSVC>:${msvc-compile-options}>")
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:${msvc-compile-options}>")
 set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
@@ -68,6 +62,7 @@ string(CONCAT is-posix $<OR:
 >)
 
 set(is-msvc $<CXX_COMPILER_ID:MSVC>)
+set(is-clang $<CXX_COMPILER_ID:Clang>)
 
 # FIXME obviously
 set(is-arm 0)
@@ -136,6 +131,79 @@ set(enable-fpic
   $<$<CXX_COMPILER_ID:Clang>:-fPIC>
   $<$<CXX_COMPILER_ID:GNU>:-fPIC>
 )
+
+if(is-msvc)
+  add_compile_options(
+    /utf-8   # Use UTF-8 source and execution character set
+    /wd4245  # Conversion with signed/unsigned mismatch.
+    /wd4267  # Conversion with possible loss of data.
+    /wd4324  # Padding structure due to alignment.
+    /wd4701  # Potentially uninitialized local variable.
+    /wd4702  # Unreachable code.
+    /wd4703  # Potentially uninitialized local pointer variable.
+    /wd4709  # Comma operator within array index expr (bugged).
+    /wd4714  # Function marked forceinline not inlined.
+    /wd4715  # Not all control paths return a value.
+    /wd4718  # Recursive call has no side-effect.
+    /wd4723  # https://crbug.com/v8/7771
+    /wd4724  # https://crbug.com/v8/7771
+    /wd4800  # Forcing value to bool.
+    /wd4506  # Benign "no definition for inline function"
+    /wd4091
+    /wd4127
+    /wd4251
+    /wd4275
+    /wd4312
+    /wd4324
+    /wd4351
+    /wd4355
+    /wd4503
+    /wd4589
+    /wd4100  # Unreferenced formal function parameter.
+    /wd4121  # Alignment of a member was sensitive to packing.
+    /wd4244  # Conversion: possible loss of data.
+    /wd4505  # Unreferenced local function has been removed.
+    /wd4510  # Default constructor could not be generated.
+    /wd4512  # Assignment operator could not be generated.
+    /wd4610  # Class can never be instantiated, constructor required.
+    /wd4838  # Narrowing conversion. Doesn't seem to be very useful.
+    /wd4995  # 'X': name was marked as #pragma deprecated
+    /wd4996  # Deprecated function warning.
+    /wd4456
+    /wd4457
+    /wd4458
+    /wd4459
+    /wd4200  # nonstandard extension used: zero-sized array in struct/union
+    /wd4201  # nonstandard extension used: nameless struct/union
+    /wd4204  # nonstandard extension used : non-constant aggregate
+    /wd4221  # nonstandard extension used : 'identifier' : cannot be
+    /wd4245  # 'conversion' : conversion from 'type1' to 'type2',
+    /wd4267  # 'var' : conversion from 'size_t' to 'type', possible loss of
+    /wd4305  # 'identifier' : truncation from 'type1' to 'type2'
+    /wd4389  # 'operator' : signed/unsigned mismatch
+    /wd4702  # unreachable code
+    /wd4701  # Potentially uninitialized local variable 'name' used
+    /wd4703  # Potentially uninitialized local pointer variable 'name' used
+    /wd4661  # 'identifier' : no suitable definition provided for explicit
+    /wd4706  # assignment within conditional expression
+    /wd4715  # 'function' : not all control paths return a value'
+  )
+elseif(is-clang)
+  add_compile_options(
+    -Wmissing-field-initializers,
+    -Wunreachable-code,
+    -Wno-shadow
+    -Wno-invalid-offsetof
+  )
+elseif()
+  add_compile_options(
+    -Wno-strict-overflow
+    -Wno-return-type
+    -Wno-int-in-bool-context
+    -Wno-deprecated
+    -Wno-invalid-offsetof
+  )
+endif()
 
 #
 # d8
