@@ -135,6 +135,12 @@ set(enable-fpic
 
 set(msvc-flags
   /utf-8   # Use UTF-8 source and execution character set
+  /wd4819
+  /wd4005
+  /wd4146
+  /wd4530
+  /wd4309
+  /wd4334
   /wd4245  # Conversion with signed/unsigned mismatch.
   /wd4267  # Conversion with possible loss of data.
   /wd4324  # Padding structure due to alignment.
