@@ -13,7 +13,6 @@ if(MSVC)
            v8/src/heap/base/asm/ia32/push_registers_masm.asm
            v8/src/heap/base/asm/x64/push_registers_masm.asm
     PROPERTY LANGUAGE ASM_MASM)
-
 endif()
 
 add_definitions("-DV8_ENABLE_WEBASSEMBLY -DV8_ADVANCED_BIGINT_ALGORITHMS -DV8_ENABLE_WASM_SIMD256_REVEC")
@@ -23,6 +22,14 @@ if(WIN32)
   add_definitions("-DX86_WINDOWS")
   add_definitions("-D_WIN32_WINNT=0x0602")
 endif()
+
+set(msvc-compile-options /utf-8
+/wd4661 /wd4819 /wd4267 /wd4996 /wd4244
+/wd4005 /wd4146 /wd4715 /wd4530 /wd4838
+/wd4506 /wd4309 /wd4312 /wd4334)
+add_compile_options("$<$<C_COMPILER_ID:MSVC>:${msvc-compile-options}>")
+add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:${msvc-compile-options}>")
+set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -88,6 +95,7 @@ string(CONCAT is-x64 $<OR:
 >)
 
 option(V8_ENABLE_CONCURRENT_MARKING "Enable concurrent marking" ON)
+option(V8_ENABLE_TURBOFAN "Enable TurboFan" ON)
 option(V8_ENABLE_I18N "Enable Internationalization support")
 
 set(
@@ -105,6 +113,7 @@ set(
   $<${is-win}:NOMINMAX>
   $<$<AND:${is-win},${is-x64}>:V8_OS_WIN_X64>
   $<$<BOOL:${V8_ENABLE_CONCURRENT_MARKING}>:V8_CONCURRENT_MARKING>
+  $<$<BOOL:${V8_ENABLE_TURBOFAN}>:V8_ENABLE_TURBOFAN>
   $<${is-win}:V8_OS_WIN32>
 )
 
@@ -501,6 +510,10 @@ file(GLOB_RECURSE compiler-sources
   CONFIGURE_DEPENDS v8/src/compiler/*.cc
 )
 list(FILTER compiler-sources EXCLUDE REGEX ".*backend/.*/.*[.]cc$")
+
+if(V8_ENABLE_TURBOFAN)
+  list(REMOVE_ITEM compiler-sources v8/src/compiler/turbofan-disabled.cc)
+endif()
 
 add_library(v8_compiler STATIC)
 target_sources(v8_compiler PRIVATE ${compiler-sources})
